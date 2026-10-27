@@ -30,7 +30,7 @@
     {
       "binding": "DB",
       "database_name": "substack-kobo-db",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "5e27f6be-9b26-40d8-9bac-7b17f6c27694",
       "migrations_dir": "migrations"
     }
   ],
@@ -65,5 +65,6 @@
 
   // Secrets (set with `wrangler secret put`, never in this file):
   //   AUTH_PASSWORD, SESSION_SECRET, API_TOKEN (optional)
-  "limits": { "cpu_ms": 30000 }
+  // On Workers Paid the default CPU limit (30 s) is ample; add
+  // "limits": { "cpu_ms": 60000 } here if very image-heavy articles time out.
 }

@@ -1,0 +1,82 @@
+# Deploys the Worker on every push to main (and on demand).
+#
+# Required GitHub repository secrets (Settings › Secrets and variables › Actions):
+#   CLOUDFLARE_API_TOKEN   token with Workers Scripts:Edit, D1:Edit, Workers R2 Storage:Edit,
+#                          Queues:Edit, Account Settings:Read
+#   CLOUDFLARE_ACCOUNT_ID  your account id (Workers & Pages overview, right sidebar)
+#   AUTH_PASSWORD, SESSION_SECRET, API_TOKEN   application secrets (pnpm run secret:generate)
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint, typecheck and test
+        run: |
+          pnpm run lint
+          pnpm run typecheck
+          pnpm run test
+
+      # Queue creation is not idempotent; failures here are expected once the
+      # queues exist (or if the plan has no Queues, in which case remove the
+      # "queues" block from wrangler.jsonc).
+      - name: Ensure queues exist
+        continue-on-error: true
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: queues create substack-kobo-jobs
+
+      - name: Ensure dead-letter queue exists
+        continue-on-error: true
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: queues create substack-kobo-jobs-dlq
+
+      - name: Apply D1 migrations
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply substack-kobo-db --remote
+
+      - name: Deploy Worker and upload secrets
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          secrets: |
+            AUTH_PASSWORD
+            SESSION_SECRET
+            API_TOKEN
+        env:
+          AUTH_PASSWORD: ${{ secrets.AUTH_PASSWORD }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}

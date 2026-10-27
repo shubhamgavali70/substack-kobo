@@ -69,7 +69,7 @@ The cron trigger (`* * * * *`) runs `runScheduledMaintenance`: recovers stale le
 | `RETRYABLE_ERROR` that never resolves | Publication returns 5xx/429 or R2 failing | Check `wrangler tail` for `job.retry_scheduled` events; retries stop after 5 attempts |
 | Articles stay `QUEUED` | Queue consumer not deployed / cron not firing | `wrangler deploy` again; check **Workers › Triggers**; without Queues, inline processing needs the request to finish normally |
 | `wrangler deploy` complains about Queues | Plan without Queues | Remove the `queues` block from `wrangler.jsonc`; the app falls back to inline + cron |
-| Processing exceeds CPU limits | Free plan CPU budget is very small | Use Workers Paid; `limits.cpu_ms` is set to 30 s |
+| Processing exceeds CPU limits | Free plan CPU budget is very small | Use Workers Paid (30 s default); raise with `limits.cpu_ms` in `wrangler.jsonc` if needed |
 | Images missing in EPUB | Host not in `ALLOWED_IMAGE_HOSTS`, too large, or unsupported type | Extend the allowlist or set `INCLUDE_IMAGES=false` for text-only EPUBs |
 | EPUB rejected by a reader | Validate with `pnpm run epub:check path/to/file.epub` | Open an issue with the EPUBCheck output |
 

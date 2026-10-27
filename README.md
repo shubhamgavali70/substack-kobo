@@ -134,7 +134,11 @@ Open http://localhost:8787, sign in with the `AUTH_PASSWORD` from `.dev.vars`, p
 
 Local values go in `.dev.vars` (see `.dev.vars.example`). Production values: `wrangler secret put <NAME>`. Rotation is documented in [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
-## Deployment (from a clean checkout)
+## Deployment with GitHub Actions
+
+`.github/workflows/deploy.yml` lints, tests, creates the queues if missing, applies D1 migrations and deploys on every push to `main`. Add these repository secrets once (Settings › Secrets and variables › Actions): `CLOUDFLARE_API_TOKEN` (Workers Scripts, D1, Workers R2 Storage and Queues edit permissions), `CLOUDFLARE_ACCOUNT_ID`, and the application secrets `AUTH_PASSWORD`, `SESSION_SECRET`, `API_TOKEN` (generate with `pnpm run secret:generate`). The R2 bucket must exist first (`wrangler r2 bucket create substack-kobo-epubs`, after enabling R2 in the dashboard).
+
+## Deployment from a clean checkout (manual)
 
 ```bash
 pnpm install
