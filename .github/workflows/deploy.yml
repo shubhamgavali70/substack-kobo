@@ -41,8 +41,7 @@ jobs:
           pnpm run test
 
       # Queue creation is not idempotent; failures here are expected once the
-      # queues exist (or if the plan has no Queues, in which case remove the
-      # "queues" block from wrangler.jsonc).
+      # queues exist.
       - name: Ensure queues exist
         continue-on-error: true
         uses: cloudflare/wrangler-action@v3

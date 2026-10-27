@@ -82,7 +82,7 @@ Everything runs under the Workers runtime; no Node.js filesystem or process APIs
 ## Prerequisites
 
 * Node.js 20+ and pnpm 10 (`corepack enable` or `npm i -g pnpm`)
-* A Cloudflare account with Workers. Processing a long article takes tens to hundreds of milliseconds of CPU, which exceeds the Free plan's per-request CPU budget; **Workers Paid is recommended**. Queues are optional (see below).
+* A Cloudflare account with Workers. Processing an article takes tens of milliseconds of CPU, which exceeds the Free plan's 10 ms per-invocation budget; **Workers Paid ($5/month) is required in practice**. R2, D1 and Queues all have free tiers that cover personal use; R2 must be enabled once in the dashboard.
 * Wrangler 4 (installed as a dev dependency; run via `pnpm exec wrangler` or `pnpm run <script>`)
 * Java 11+ only if you want to run EPUBCheck locally (`pnpm run epub:check`)
 
@@ -169,7 +169,7 @@ The deploy output prints the `*.workers.dev` URL; add a custom domain under **Wo
 
 ### Queues: optional
 
-`wrangler.jsonc` ships with a queue producer and consumer because they give immediate, reliable background processing with Cloudflare-managed delivery. If your plan does not include Queues (Wrangler will say so at deploy time), delete the `queues` block. The code detects the missing `ARTICLE_QUEUE` binding and processes each job right after the capture response via `waitUntil`, with the one-minute cron trigger as the safety net for retries and anything that did not finish. All tests cover both paths.
+`wrangler.jsonc` ships with a queue producer and consumer because they give immediate, reliable background processing with Cloudflare-managed delivery. Queues is included in the Workers Free plan (10,000 operations/day). If you prefer not to use it, delete the `queues` block. The code detects the missing `ARTICLE_QUEUE` binding and processes each job right after the capture response via `waitUntil`, with the one-minute cron trigger as the safety net for retries and anything that did not finish. All tests cover both paths.
 
 ### Cron
 
