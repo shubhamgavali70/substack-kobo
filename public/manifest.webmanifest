@@ -1,0 +1,16 @@
+{
+  "name": "Substack to Kobo",
+  "short_name": "To Kobo",
+  "description": "Save Substack articles as EPUBs for your Kobo",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#1f3a5f",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": { "url": "url", "text": "text", "title": "title" }
+  }
+}

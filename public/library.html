@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Library · Substack to Kobo</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#1f3a5f">
+</head>
+<body>
+  <header class="top">
+    <h1>Substack to Kobo</h1>
+    <nav><a href="/">Save</a><a href="/library" aria-current="page">Library</a><a href="/login" id="logout-link">Sign out</a></nav>
+  </header>
+  <main>
+    <form id="filter-form" class="card">
+      <div class="row">
+        <div style="flex:3 1 200px"><label for="q">Search</label><input id="q" name="q" type="search" placeholder="Title, author, publication"></div>
+        <div style="flex:1 1 140px"><label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="">All</option>
+            <option value="READY">Ready</option>
+            <option value="QUEUED">Queued</option>
+            <option value="PROCESSING">Processing</option>
+            <option value="RETRYABLE_ERROR">Retrying</option>
+            <option value="AUTHORIZATION_REQUIRED">Needs import</option>
+            <option value="CONTENT_UNAVAILABLE">Unavailable</option>
+            <option value="FAILED">Failed</option>
+          </select>
+        </div>
+      </div>
+      <div style="height:10px"></div>
+      <button type="submit" class="secondary">Apply</button>
+    </form>
+
+    <div id="library-alert" class="alert error hidden" role="alert"></div>
+    <div id="library-list" aria-live="polite"><p class="muted"><span class="spinner"></span> Loading…</p></div>
+    <div class="pager">
+      <button id="prev-page" class="secondary" type="button">‹ Previous</button>
+      <span id="page-info" class="muted"></span>
+      <button id="next-page" class="secondary" type="button">Next ›</button>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>SK.initLibrary();</script>
+</body>
+</html>

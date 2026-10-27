@@ -1,0 +1,69 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "substack-kobo",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Static UI (capture page, library, login). The Worker runs first so every
+  // request passes through authentication before any asset is served.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "none",
+    "run_worker_first": true
+  },
+
+  "vars": {
+    // Public hostnames that may be submitted as article URLs, in addition to
+    // *.substack.com. Override per-environment or with a secret if preferred.
+    "ALLOWED_HOSTS": "",
+    "ALLOWED_IMAGE_HOSTS": "",
+    "APP_NAME": "Substack to Kobo",
+    // Set to "false" to skip image downloads and produce text-only EPUBs.
+    "INCLUDE_IMAGES": "true",
+    "MAX_JOB_ATTEMPTS": "5"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "substack-kobo-db",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "EPUBS",
+      "bucket_name": "substack-kobo-epubs"
+    }
+  ],
+
+  // Cloudflare Queues give immediate, reliable asynchronous processing.
+  // If your account plan does not include Queues, delete both the "queues"
+  // block below and the "ARTICLE_QUEUE" usage is skipped automatically: jobs
+  // are then processed inline after the response and by the cron sweep.
+  "queues": {
+    "producers": [{ "binding": "ARTICLE_QUEUE", "queue": "substack-kobo-jobs" }],
+    "consumers": [
+      {
+        "queue": "substack-kobo-jobs",
+        "max_batch_size": 5,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "max_concurrency": 2,
+        "dead_letter_queue": "substack-kobo-jobs-dlq"
+      }
+    ]
+  },
+
+  // Every minute: dispatch due retries, recover stale leases, prune sessions.
+  "triggers": { "crons": ["* * * * *"] },
+
+  // Secrets (set with `wrangler secret put`, never in this file):
+  //   AUTH_PASSWORD, SESSION_SECRET, API_TOKEN (optional)
+  "limits": { "cpu_ms": 30000 }
+}

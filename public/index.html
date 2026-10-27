@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Save article · Substack to Kobo</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#1f3a5f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="To Kobo">
+</head>
+<body>
+  <header class="top">
+    <h1>Substack to Kobo</h1>
+    <nav><a href="/" aria-current="page">Save</a><a href="/library">Library</a><a href="/login" id="logout-link">Sign out</a></nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Save an article</h2>
+      <p class="muted">Paste the link of a Substack post you bookmarked. Only the links you submit here are processed.</p>
+      <form id="capture-form">
+        <label for="url">Article URL</label>
+        <input id="url" name="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://publication.substack.com/p/…" required>
+        <div style="height:12px"></div>
+        <button type="submit" class="block" id="capture-button">Convert to EPUB</button>
+      </form>
+    </div>
+
+    <div id="result" class="card hidden" aria-live="polite">
+      <div class="row" style="justify-content:space-between">
+        <h2 id="result-title" style="margin:0">Processing</h2>
+        <span id="result-status" class="status">QUEUED</span>
+      </div>
+      <p id="result-meta" class="muted"></p>
+      <p id="result-message"></p>
+      <div id="result-error" class="alert error hidden" role="alert"></div>
+      <div class="row">
+        <a id="download-link" class="button hidden" href="/library" download>Download EPUB</a>
+        <button id="retry-button" class="secondary hidden" type="button">Retry</button>
+        <a id="original-link" class="button secondary hidden" href="/library" target="_blank" rel="noopener noreferrer">Open original</a>
+        <a href="/library" class="button secondary">Go to library</a>
+      </div>
+
+      <div id="import-panel" class="hidden" style="margin-top:14px">
+        <h2>Manual import</h2>
+        <p class="muted">This post could not be fetched publicly (for example it is subscriber-only). If you are entitled to read it, paste the full text or HTML you received (for example from the subscriber email). Nothing is bypassed; the EPUB is built from what you provide.</p>
+        <form id="import-form">
+          <label for="import-content">Article text or HTML</label>
+          <textarea id="import-content" required placeholder="Paste the article here…"></textarea>
+          <div style="height:10px"></div>
+          <div class="row">
+            <div><label for="import-title">Title (optional)</label><input id="import-title" type="text"></div>
+            <div><label for="import-author">Author (optional)</label><input id="import-author" type="text"></div>
+          </div>
+          <div style="height:12px"></div>
+          <button type="submit" class="block" id="import-button">Build EPUB from pasted content</button>
+        </form>
+      </div>
+    </div>
+
+    <details class="card help">
+      <summary>How to send links here from your phone</summary>
+      <p><strong>Android:</strong> open this page in Chrome, choose “Add to Home screen” (install). The app then appears in the Share sheet; sharing a Substack post opens this page with the link filled in.</p>
+      <p><strong>iOS:</strong> share from the Substack app → “Copy link”, then open this page and paste. Or create a Shortcut that accepts URLs and sends them to <code>POST /api/articles</code> with your API token (see docs/MOBILE.md).</p>
+    </details>
+  </main>
+  <script src="/app.js"></script>
+  <script>SK.initCapture();</script>
+</body>
+</html>

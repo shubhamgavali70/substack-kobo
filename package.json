@@ -1,0 +1,53 @@
+{
+  "name": "substack-kobo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted Substack-to-EPUB reading pipeline on Cloudflare Workers, D1 and R2 for a Kobo e-reader",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run test",
+    "db:migrate:local": "wrangler d1 migrations apply substack-kobo-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply substack-kobo-db --remote",
+    "epub:sample": "node scripts/generate-sample-epub.mjs",
+    "epub:check": "node scripts/epubcheck.mjs",
+    "secret:generate": "node scripts/generate-secret.mjs",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "domhandler": "^6.0.1",
+    "fflate": "^0.8.3",
+    "hono": "^4.13.14",
+    "htmlparser2": "^12.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.3",
+    "@cloudflare/vitest-plugin": "^1.4.8",
+    "@cloudflare/workers-types": "^5.20261027.1",
+    "epubcheck-static": "^4.0.0-v5.3.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.153.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd",
+      "@biomejs/biome"
+    ]
+  }
+}

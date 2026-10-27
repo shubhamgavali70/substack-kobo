@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sign in · Substack to Kobo</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#1f3a5f">
+</head>
+<body>
+  <header class="top"><h1>Substack to Kobo</h1></header>
+  <main>
+    <div class="card">
+      <h2>Sign in</h2>
+      <p class="muted">This is a private, single-user library. Enter the password you configured as the <code>AUTH_PASSWORD</code> secret.</p>
+      <form id="login-form" autocomplete="on">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <div style="height:12px"></div>
+        <button type="submit" class="block" id="login-button">Sign in</button>
+      </form>
+      <div id="login-error" class="alert error hidden" role="alert"></div>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>SK.initLogin();</script>
+</body>
+</html>

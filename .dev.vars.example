@@ -1,0 +1,19 @@
+# Copy to .dev.vars for local development. Never commit .dev.vars.
+# Generate strong values with: pnpm run secret:generate
+
+# Password used on the login page (single-user). Use 24+ random characters.
+AUTH_PASSWORD=change-me-local-only
+
+# Secret used to sign session cookies (HMAC-SHA256). Rotate to invalidate all sessions.
+SESSION_SECRET=change-me-32-bytes-or-more-random-string
+
+# Optional long-lived bearer token for iOS Shortcuts / Android automation apps.
+# Leave empty to disable token auth entirely.
+API_TOKEN=
+
+# Comma-separated extra hostnames allowed for article URLs (custom Substack domains).
+# *.substack.com and open.substack.com are always allowed.
+ALLOWED_HOSTS=
+
+# Comma-separated extra hostnames allowed for image downloads (substackcdn.com is default).
+ALLOWED_IMAGE_HOSTS=
