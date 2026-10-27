@@ -61,7 +61,7 @@
   },
 
   // Every minute: dispatch due retries, recover stale leases, prune sessions.
-  "triggers": { "crons": ["* * * * *"] },
+  "triggers": { "crons": ["* * * * *"] }
 
   // Secrets (set with `wrangler secret put`, never in this file):
   //   AUTH_PASSWORD, SESSION_SECRET, API_TOKEN (optional)
