@@ -4,6 +4,7 @@ import { assertSafeDestination } from '../capture/urlPolicy';
 import { ArticleRepository } from '../db/articles';
 import { JobRepository } from '../db/jobs';
 import { isoAfterSeconds } from '../db/time';
+import { deliverToDriveIfConnected } from '../delivery';
 import { type Env, loadConfig } from '../env';
 import { generateEpub } from '../epub';
 import type { Logger } from '../observability/logger';
@@ -110,6 +111,19 @@ export async function processJob(env: Env, jobId: string, logger: Logger): Promi
     });
     await jobs.markCompleted(job.id);
     logger.info('job.completed', { durationMs: Date.now() - startedAt, epubBytes: epub.size });
+
+    // Optional push delivery; never affects the READY state.
+    const readyArticle = await articles.findById(article.id);
+    if (readyArticle) {
+      const delivery = await deliverToDriveIfConnected(
+        env,
+        readyArticle,
+        epub.bytes,
+        epub.filename,
+        logger,
+      );
+      if (delivery !== 'skipped') logger.info('delivery.drive', { outcome: delivery });
+    }
     return 'completed';
   } catch (rawError) {
     const error = toAppError(rawError, 'INTERNAL_ERROR');

@@ -5,6 +5,7 @@ import { loadConfig } from './env';
 import { createLogger, type Logger, newRequestId } from './observability/logger';
 import { articleRoutes } from './routes/articles';
 import { authRoutes } from './routes/auth';
+import { googleRoutes } from './routes/google';
 import { pageRoutes } from './routes/pages';
 import { AppError, isAppError } from './types';
 
@@ -55,6 +56,7 @@ export function createApp(): Hono<AppBindings> {
   app.get('/api/health', (c) => c.json({ ok: true, requestId: c.get('requestId') }));
   app.route('/api/auth', authRoutes);
   app.route('/api/articles', articleRoutes);
+  app.route('/api/google', googleRoutes);
   app.all('/api/*', () => {
     throw new AppError('NOT_FOUND', 'Unknown API route.');
   });

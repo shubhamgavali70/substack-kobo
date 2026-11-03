@@ -51,6 +51,9 @@ export const ERROR_CODES = [
   'RATE_LIMITED',
   'CONFLICT',
   'INTERNAL_ERROR',
+  'INTEGRATION_NOT_CONFIGURED',
+  'INTEGRATION_NOT_CONNECTED',
+  'DELIVERY_FAILED',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
@@ -104,7 +107,12 @@ function defaultHttpStatus(code: ErrorCode): number {
       return 404;
     case 'CONFLICT':
     case 'DUPLICATE_ARTICLE':
+    case 'INTEGRATION_NOT_CONNECTED':
       return 409;
+    case 'INTEGRATION_NOT_CONFIGURED':
+      return 501;
+    case 'DELIVERY_FAILED':
+      return 502;
     case 'TOO_LARGE':
       return 413;
     case 'RATE_LIMITED':
@@ -131,6 +139,8 @@ export function toAppError(error: unknown, fallbackCode: ErrorCode = 'INTERNAL_E
 
 export type ContentSourceKind = 'public' | 'manual';
 
+export type DriveStatus = 'UPLOADED' | 'FAILED';
+
 export interface ArticleRecord {
   id: string;
   canonicalUrl: string;
@@ -149,6 +159,10 @@ export interface ArticleRecord {
   epubSize: number | null;
   epubFilename: string | null;
   wordCount: number | null;
+  driveFileId: string | null;
+  driveStatus: DriveStatus | null;
+  driveError: string | null;
+  driveUploadedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -231,6 +245,10 @@ export interface ArticleView {
   downloadUrl: string | null;
   canRetry: boolean;
   canImport: boolean;
+  /** Google Drive delivery state (null until an upload was attempted). */
+  driveStatus: DriveStatus | null;
+  driveError: string | null;
+  driveUploadedAt: string | null;
   updatedAt: string;
 }
 

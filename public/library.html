@@ -35,6 +35,22 @@
       <button type="submit" class="secondary">Apply</button>
     </form>
 
+    <section id="drive-card" class="card">
+      <div class="row between top">
+        <h2 class="m0">Google Drive delivery</h2>
+        <span id="drive-badge" class="status">Checking…</span>
+      </div>
+      <p id="drive-text" class="muted">Checking connection…</p>
+      <div class="row">
+        <a id="drive-connect" class="button hidden" href="/api/google/connect">Connect Google Drive</a>
+        <button id="drive-disconnect" class="danger hidden" type="button">Disconnect</button>
+      </div>
+      <details class="help">
+        <summary>How this reaches the Kobo</summary>
+        <p>When connected, every finished EPUB is uploaded to the Drive folder shown above. On the Kobo, link the same Google account (More › Google Drive), then tap Sync; the books appear under My Books. See docs/GOOGLE_DRIVE.md for setup.</p>
+      </details>
+    </section>
+
     <div id="library-alert" class="alert error hidden" role="alert"></div>
     <div id="library-list" aria-live="polite"><p class="muted"><span class="spinner"></span> Loading…</p></div>
     <div class="pager">

@@ -2,6 +2,7 @@ import type {
   ArticleRecord,
   ArticleStatus,
   ContentSourceKind,
+  DriveStatus,
   ErrorCode,
   LibraryFilters,
   Paginated,
@@ -26,6 +27,10 @@ interface ArticleRow {
   epub_size: number | null;
   epub_filename: string | null;
   word_count: number | null;
+  drive_file_id: string | null;
+  drive_status: DriveStatus | null;
+  drive_error: string | null;
+  drive_uploaded_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -49,6 +54,10 @@ function mapRow(row: ArticleRow): ArticleRecord {
     epubSize: row.epub_size,
     epubFilename: row.epub_filename,
     wordCount: row.word_count,
+    driveFileId: row.drive_file_id,
+    driveStatus: row.drive_status,
+    driveError: row.drive_error,
+    driveUploadedAt: row.drive_uploaded_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -180,6 +189,36 @@ export class ArticleRepository {
     await this.db
       .prepare(
         'UPDATE articles SET epub_object_key = NULL, epub_size = NULL, epub_filename = NULL, updated_at = ?2 WHERE id = ?1',
+      )
+      .bind(id, nowIso())
+      .run();
+  }
+
+  async setDriveResult(id: string, result: { fileId: string } | { error: string }): Promise<void> {
+    const now = nowIso();
+    if ('fileId' in result) {
+      await this.db
+        .prepare(
+          `UPDATE articles SET drive_file_id = ?2, drive_status = 'UPLOADED', drive_error = NULL,
+             drive_uploaded_at = ?3, updated_at = ?3 WHERE id = ?1`,
+        )
+        .bind(id, result.fileId, now)
+        .run();
+    } else {
+      await this.db
+        .prepare(
+          `UPDATE articles SET drive_status = 'FAILED', drive_error = ?2, updated_at = ?3 WHERE id = ?1`,
+        )
+        .bind(id, result.error.slice(0, 500), now)
+        .run();
+    }
+  }
+
+  async clearDrive(id: string): Promise<void> {
+    await this.db
+      .prepare(
+        `UPDATE articles SET drive_file_id = NULL, drive_status = NULL, drive_error = NULL,
+           drive_uploaded_at = NULL, updated_at = ?2 WHERE id = ?1`,
       )
       .bind(id, nowIso())
       .run();

@@ -1,10 +1,10 @@
 import type { ArticleRecord } from '../types';
 
 /**
- * Delivery adapters move a finished EPUB to the reader. Only direct download is
- * implemented; cloud-folder delivery (Google Drive / Dropbox, which Kobo can
- * sync from) and any future wireless sync are separate adapters that would
- * plug in here without touching capture or processing.
+ * Delivery adapters move a finished EPUB to the reader. Direct download is the
+ * baseline; Google Drive upload (see googleDrive.ts / driveDelivery.ts) is an
+ * optional push adapter the Kobo can sync from. Dropbox or any future wireless
+ * sync would plug in the same way without touching capture or processing.
  */
 export interface DeliveryAdapter {
   readonly id: 'direct-download' | 'google-drive' | 'dropbox';

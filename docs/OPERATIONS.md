@@ -7,6 +7,7 @@
 | `AUTH_PASSWORD` | Login password | New logins need the new password; existing sessions stay valid until they expire or `SESSION_SECRET` rotates |
 | `SESSION_SECRET` | HMAC key for session cookies (≥ 32 chars) | All sessions are invalidated immediately |
 | `API_TOKEN` | Optional bearer token for Shortcuts/automations | Old token stops working immediately; update the Shortcut |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional Google Drive OAuth client | Existing connection keeps working only if the client is the same; otherwise Disconnect and Connect again |
 
 Rotate with:
 
@@ -16,6 +17,8 @@ wrangler secret put SESSION_SECRET  # paste the value when prompted
 wrangler secret put AUTH_PASSWORD
 wrangler secret put API_TOKEN       # or: wrangler secret delete API_TOKEN to disable token auth
 ```
+
+Rotating `SESSION_SECRET` also makes the encrypted Google Drive token unreadable; the library page then shows *Reconnect needed*.
 
 To force-logout every browser without rotating the key, run `wrangler d1 execute substack-kobo-db --remote --command "DELETE FROM sessions"`.
 

@@ -23,7 +23,13 @@
     "APP_NAME": "Substack to Kobo",
     // Set to "false" to skip image downloads and produce text-only EPUBs.
     "INCLUDE_IMAGES": "true",
-    "MAX_JOB_ATTEMPTS": "5"
+    "MAX_JOB_ATTEMPTS": "5",
+    // Google Drive delivery (optional; needs GOOGLE_CLIENT_ID/SECRET secrets).
+    // "file" scope uploads into a folder the app creates; "full" + FOLDER_ID
+    // targets an existing folder such as the one your Kobo syncs from.
+    "GOOGLE_DRIVE_FOLDER_NAME": "Substack to Kobo",
+    "GOOGLE_DRIVE_FOLDER_ID": "",
+    "GOOGLE_DRIVE_SCOPE": "file"
   },
 
   "d1_databases": [
@@ -64,7 +70,8 @@
   "triggers": { "crons": ["* * * * *"] }
 
   // Secrets (set with `wrangler secret put`, never in this file):
-  //   AUTH_PASSWORD, SESSION_SECRET, API_TOKEN (optional)
+  //   AUTH_PASSWORD, SESSION_SECRET, API_TOKEN (optional),
+  //   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (optional, Drive delivery)
   // On Workers Paid the default CPU limit (30 s) is ample; add
   // "limits": { "cpu_ms": 60000 } here if very image-heavy articles time out.
 }

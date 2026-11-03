@@ -17,3 +17,8 @@ ALLOWED_HOSTS=
 
 # Comma-separated extra hostnames allowed for image downloads (substackcdn.com is default).
 ALLOWED_IMAGE_HOSTS=
+
+# Optional Google Drive delivery: OAuth client (Web application) from Google Cloud.
+# Redirect URI must be <your-origin>/api/google/callback. See docs/GOOGLE_DRIVE.md.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=

@@ -14,7 +14,7 @@ A single Cloudflare Worker hosts the API, the static UI, the queue consumer and 
 | 6 | R2 storage | `src/storage/r2.ts` | EPUB and import objects; keys are internal |
 | 7 | Background processing | `src/jobs/*` | Processor, dispatcher (Queues or inline), cron maintenance, queue consumer |
 | 8 | Library UI | `public/*`, `src/routes/pages.ts` | Capture page, library, login; served through the Worker behind auth |
-| 9 | Download | `src/routes/articles.ts` (`/download`), `src/delivery/*` | Authenticated streaming of the EPUB with correct headers |
+| 9 | Delivery | `src/routes/articles.ts` (`/download`), `src/delivery/*`, `src/routes/google.ts` | Authenticated EPUB download; optional Google Drive push (OAuth, encrypted tokens, upload after READY) |
 | 10 | Auth | `src/auth/*` | Password login → signed session cookie; optional bearer API token; CSRF and rate limiting |
 
 ## Data flow
@@ -45,7 +45,9 @@ flowchart TD
     R2 --> Ready[D1: READY + metadata]
     Ready --> Library[Library UI / GET /api/articles]
     Library -->|GET /download| Download[Authenticated EPUB download]
-    Download --> Kobo[Kobo Libra Colour: USB, Google Drive or Dropbox]
+    Ready -->|if connected| Drive[Google Drive folder]
+    Drive --> Kobo[Kobo Libra Colour: Sync]
+    Download --> Kobo
 ```
 
 ## Request lifecycle

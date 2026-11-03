@@ -177,12 +177,12 @@
       const errorBox = $('result-error');
       show(errorBox, false);
       if (article.status === 'READY') {
-        text(
-          message,
-          'Your EPUB is ready' +
-            (article.epubSize ? ` (${formatSize(article.epubSize)})` : '') +
-            '.',
-        );
+        let readyText = `Your EPUB is ready${article.epubSize ? ` (${formatSize(article.epubSize)})` : ''}.`;
+        if (article.driveStatus === 'UPLOADED')
+          readyText += ' It is in your Google Drive; tap Sync on the Kobo.';
+        if (article.driveStatus === 'FAILED')
+          readyText += ` Google Drive upload failed: ${article.driveError || 'unknown error'}`;
+        text(message, readyText);
       } else if (article.status === 'QUEUED' || article.status === 'PROCESSING') {
         message.innerHTML = '<span class="spinner"></span> Fetching and converting the article…';
       } else {
@@ -296,9 +296,103 @@
     });
   }
 
+  /* ---------- Google Drive settings ---------- */
+  async function initDriveCard(onChange) {
+    const card = $('drive-card');
+    if (!card) return;
+    const badge = $('drive-badge');
+    const textEl = $('drive-text');
+    const connect = $('drive-connect');
+    const disconnect = $('drive-disconnect');
+    const params = new URLSearchParams(window.location.search);
+    const notice = params.get('drive');
+    if (notice) history.replaceState(null, '', '/library');
+
+    async function refresh() {
+      let connected = false;
+      try {
+        const data = await api('/api/google/status');
+        const d = data.drive;
+        connected = d.connected;
+        if (!d.configured) {
+          badge.className = 'status';
+          text(badge, 'Not configured');
+          text(
+            textEl,
+            'Set the GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET secrets to enable automatic uploads (see docs/GOOGLE_DRIVE.md).',
+          );
+          show(connect, false);
+          show(disconnect, false);
+        } else if (d.needsReconnect) {
+          badge.className = 'status RETRYABLE_ERROR';
+          text(badge, 'Reconnect needed');
+          text(
+            textEl,
+            'The stored credentials can no longer be read (the session secret changed). Connect again.',
+          );
+          show(connect, true);
+          show(disconnect, true);
+        } else if (d.connected) {
+          badge.className = 'status READY';
+          text(badge, 'Connected');
+          const where =
+            d.folderId && !d.folderName
+              ? 'the configured folder'
+              : `the folder “${d.folderName || 'Substack to Kobo'}”`;
+          text(
+            textEl,
+            (notice === 'connected' ? 'Google Drive connected. ' : '') +
+              'Signed in' +
+              (d.accountEmail ? ` as ${d.accountEmail}` : '') +
+              '. New EPUBs are uploaded to ' +
+              where +
+              ' in your Drive; tap Sync on the Kobo to fetch them.',
+          );
+          show(connect, false);
+          show(disconnect, true);
+        } else {
+          badge.className = 'status';
+          text(badge, 'Not connected');
+          text(
+            textEl,
+            notice === 'denied'
+              ? 'Google access was denied. Try connecting again.'
+              : 'Connect your Google account to upload each finished EPUB automatically.',
+          );
+          show(connect, true);
+          show(disconnect, false);
+        }
+      } catch (err) {
+        badge.className = 'status FAILED';
+        text(badge, 'Error');
+        text(textEl, err.message);
+      }
+      if (onChange) onChange(connected);
+    }
+    disconnect.addEventListener('click', async () => {
+      if (!window.confirm('Disconnect Google Drive? Files already uploaded stay in your Drive.'))
+        return;
+      disconnect.disabled = true;
+      try {
+        await api('/api/google', { method: 'DELETE' });
+        await refresh();
+      } catch (err) {
+        text(textEl, err.message);
+      } finally {
+        disconnect.disabled = false;
+      }
+    });
+    await refresh();
+  }
+
   /* ---------- Library ---------- */
   function initLibrary() {
     wireLogout();
+    let driveConnected = false;
+    initDriveCard((connected) => {
+      driveConnected = connected;
+      load();
+    });
     const list = $('library-list');
     const alert = $('library-alert');
     const state = { page: 1, pageSize: 20, q: '', status: '', totalPages: 1 };
@@ -313,6 +407,7 @@
         article.epubSize ? formatSize(article.epubSize) : null,
         article.wordCount ? `${article.wordCount.toLocaleString()} words` : null,
       ].filter(Boolean);
+      if (article.driveStatus === 'UPLOADED') meta.push('In Google Drive');
       const actions = [];
       if (article.downloadUrl)
         actions.push(
@@ -326,6 +421,13 @@
             article.id +
             '">Retry</button>',
         );
+      if (article.downloadUrl && driveConnected) {
+        actions.push(
+          `<button class="secondary" data-action="drive" data-id="${article.id}">${
+            article.driveStatus === 'UPLOADED' ? 'Re-send to Drive' : 'Send to Drive'
+          }</button>`,
+        );
+      }
       if (article.status === 'AUTHORIZATION_REQUIRED' || article.status === 'CONTENT_UNAVAILABLE') {
         actions.push(`<a class="button secondary" href="/?import=${article.id}">Manual import</a>`);
       }
@@ -355,6 +457,9 @@
         '</div>' +
         (article.errorMessage && article.status !== 'READY'
           ? `<div class="error">${escapeHtml(article.errorMessage)}</div>`
+          : '') +
+        (article.driveStatus === 'FAILED'
+          ? `<div class="error">Drive upload failed: ${escapeHtml(article.driveError || 'unknown error')}</div>`
           : '') +
         '<div class="actions">' +
         actions.join('') +
@@ -433,6 +538,8 @@
           await api(`/api/articles/${id}`, { method: 'DELETE' });
         } else if (action === 'retry') {
           await api(`/api/articles/${id}/retry`, { method: 'POST' });
+        } else if (action === 'drive') {
+          await api(`/api/articles/${id}/drive`, { method: 'POST' });
         }
         await load();
       } catch (err) {

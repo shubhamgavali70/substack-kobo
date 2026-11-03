@@ -12,6 +12,7 @@ import {
   getLibrary,
   importArticleContent,
   retryArticle,
+  sendArticleToDrive,
   toArticleView,
 } from '../library/service';
 import { EpubStorage } from '../storage/r2';
@@ -97,6 +98,11 @@ articleRoutes.post('/:id/import', async (c) => {
   const payload = await c.req.json().catch(() => null);
   const article = await importArticleContent(deps(c), parseId(c.req.param('id')), payload);
   return c.json({ article: toArticleView(article) }, 202);
+});
+
+articleRoutes.post('/:id/drive', async (c) => {
+  const article = await sendArticleToDrive(deps(c), parseId(c.req.param('id')));
+  return c.json({ article: toArticleView(article) });
 });
 
 articleRoutes.delete('/:id', async (c) => {

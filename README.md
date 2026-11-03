@@ -31,7 +31,7 @@ sequenceDiagram
     P->>K: USB, or Google Drive / Dropbox folder the Kobo syncs from
 ```
 
-Full details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Device workflow: [docs/KOBO.md](docs/KOBO.md). Phone workflows: [docs/MOBILE.md](docs/MOBILE.md). Operations, backups and troubleshooting: [docs/OPERATIONS.md](docs/OPERATIONS.md). Security model: [docs/SECURITY.md](docs/SECURITY.md).
+Full details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Device workflow: [docs/KOBO.md](docs/KOBO.md). Automatic Google Drive upload: [docs/GOOGLE_DRIVE.md](docs/GOOGLE_DRIVE.md). Phone workflows: [docs/MOBILE.md](docs/MOBILE.md). Operations, backups and troubleshooting: [docs/OPERATIONS.md](docs/OPERATIONS.md). Security model: [docs/SECURITY.md](docs/SECURITY.md).
 
 ## Stack
 
@@ -123,6 +123,8 @@ Open http://localhost:8787, sign in with the `AUTH_PASSWORD` from `.dev.vars`, p
 | `INCLUDE_IMAGES` | `"true"` | Set `"false"` for text-only EPUBs |
 | `MAX_JOB_ATTEMPTS` | `"5"` | Automatic retry budget per job |
 | `APP_NAME` | `"Substack to Kobo"` | Shown in the EPUB footer |
+| `GOOGLE_DRIVE_FOLDER_NAME` | `"Substack to Kobo"` | Drive folder created by the app for uploads |
+| `GOOGLE_DRIVE_FOLDER_ID` / `GOOGLE_DRIVE_SCOPE` | `""` / `"file"` | Target an existing Drive folder with the broader scope (see docs) |
 
 ### Secrets (never in source control)
 
@@ -131,6 +133,7 @@ Open http://localhost:8787, sign in with the `AUTH_PASSWORD` from `.dev.vars`, p
 | `AUTH_PASSWORD` | yes | Login password (use 24+ random characters) |
 | `SESSION_SECRET` | yes | ≥ 32 characters; signs session cookies |
 | `API_TOKEN` | no | Bearer token for iOS Shortcuts / automations |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | no | Enables Google Drive delivery (see [docs/GOOGLE_DRIVE.md](docs/GOOGLE_DRIVE.md)) |
 
 Local values go in `.dev.vars` (see `.dev.vars.example`). Production values: `wrangler secret put <NAME>`. Rotation is documented in [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
@@ -179,7 +182,7 @@ The deploy output prints the `*.workers.dev` URL; add a custom domain under **Wo
 
 1. **Save**: bookmark in the Substack app as usual; then Share → the installed capture page (Android) or Shortcut/paste (iOS). The capture page shows live status and a download button when ready.
 2. **Library** (`/library`): search by title/author/publication, filter by status, download, retry, delete, open the original.
-3. **Kobo**: download the EPUB and copy via USB, or save it to the Google Drive / Dropbox folder your Kobo is linked to and tap Sync. Details and caveats in [docs/KOBO.md](docs/KOBO.md).
+3. **Kobo**: connect Google Drive once from the library page and every finished EPUB is uploaded automatically; on the Kobo, link the same account and tap Sync ([docs/GOOGLE_DRIVE.md](docs/GOOGLE_DRIVE.md)). Or download the EPUB and copy via USB. Details and caveats in [docs/KOBO.md](docs/KOBO.md).
 
 ### Statuses
 
@@ -209,6 +212,6 @@ Tests run inside the Workers runtime with isolated D1/R2 per test file and the r
 * **Paywalled content is not fetched.** It is reported as `AUTHORIZATION_REQUIRED` and can be imported manually.
 * **Layout changes at Substack can break extraction.** The extractor relies on the rendered page's body container and standard metadata; if it fails, articles end in `CONTENT_UNAVAILABLE` and manual import still works.
 * **Covers are SVG.** They render in the book; Kobo library thumbnails for SVG covers vary by firmware.
-* **No cloud delivery adapter yet.** Direct download is implemented; Google Drive / Dropbox upload adapters are future work (the device-side sync from those folders is a Kobo feature and works today manually).
+* **Google Drive is the only push delivery.** Dropbox upload would be a second adapter following the same pattern. Whether Kobo picks up files from any Drive folder or only a specific one depends on firmware; the integration supports both modes (see docs/GOOGLE_DRIVE.md).
 * **Rate limiting is per-isolate D1 counters**, adequate for a personal system; put Cloudflare Access/WAF in front for anything stronger.
 * **Free plan.** CPU limits on the Free plan are too small for HTML parsing plus ZIP generation of larger articles; use Workers Paid.

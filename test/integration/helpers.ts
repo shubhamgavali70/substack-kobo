@@ -13,7 +13,10 @@ export type RouteHandler = (request: Request) => Response | Promise<Response>;
 
 /** Routes for the stubbed outbound fetch, keyed by exact URL. */
 export const routes = new Map<string, RouteHandler>();
+/** Prefix routes (for APIs with variable query strings), checked after exact routes. */
+export const prefixRoutes = new Map<string, RouteHandler>();
 export const outboundCalls: string[] = [];
+export const outboundRequests: Request[] = [];
 
 export function html(body: string, status = 200): Response {
   return new Response(body, { status, headers: { 'content-type': 'text/html; charset=utf-8' } });
@@ -21,7 +24,9 @@ export function html(body: string, status = 200): Response {
 
 export function installDefaultRoutes(): void {
   routes.clear();
+  prefixRoutes.clear();
   outboundCalls.length = 0;
+  outboundRequests.length = 0;
   routes.set(FREE_URL, () => html(fixtures.freePost));
   routes.set(PAID_URL, () => html(fixtures.paywalledPost));
   routes.set(
@@ -36,7 +41,16 @@ export function stubOutboundFetch(): void {
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const request = new Request(input, init);
       outboundCalls.push(request.url);
-      const handler = routes.get(request.url);
+      outboundRequests.push(request.clone());
+      let handler = routes.get(request.url);
+      if (!handler) {
+        for (const [prefix, h] of prefixRoutes) {
+          if (request.url.startsWith(prefix)) {
+            handler = h;
+            break;
+          }
+        }
+      }
       if (!handler)
         return new Response('not found', {
           status: 404,

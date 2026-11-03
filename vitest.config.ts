@@ -16,6 +16,8 @@ export default defineConfig(async () => {
             API_TOKEN: 'test-api-token-0123456789',
             ALLOWED_HOSTS: 'custom.example.org',
             ALLOWED_IMAGE_HOSTS: 'images.example.org',
+            GOOGLE_CLIENT_ID: 'test-client-id.apps.googleusercontent.com',
+            GOOGLE_CLIENT_SECRET: 'test-client-secret',
           },
         },
       }),

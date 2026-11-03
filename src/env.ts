@@ -12,6 +12,9 @@ export interface Env {
   AUTH_PASSWORD?: string;
   SESSION_SECRET?: string;
   API_TOKEN?: string;
+  /** Optional: Google OAuth client for the Drive delivery adapter. */
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
 
   // Plain vars (wrangler.jsonc "vars")
   ALLOWED_HOSTS?: string;
@@ -19,6 +22,12 @@ export interface Env {
   APP_NAME?: string;
   INCLUDE_IMAGES?: string;
   MAX_JOB_ATTEMPTS?: string;
+  /** Name of the Drive folder the app creates (drive.file scope). */
+  GOOGLE_DRIVE_FOLDER_NAME?: string;
+  /** Existing Drive folder id to upload into (requires GOOGLE_DRIVE_SCOPE=full). */
+  GOOGLE_DRIVE_FOLDER_ID?: string;
+  /** "file" (default, least privilege) or "full". */
+  GOOGLE_DRIVE_SCOPE?: string;
 
   // Test-only: migrations applied by the Vitest setup file.
   TEST_MIGRATIONS?: Array<{ name: string; queries: string[] }>;
@@ -40,6 +49,17 @@ export interface AppConfig {
   /** How long a job claim is held before it is considered stale. */
   jobLeaseSeconds: number;
   sessionTtlSeconds: number;
+  googleDrive: GoogleDriveConfig;
+}
+
+export interface GoogleDriveConfig {
+  /** True when both OAuth client credentials are present. */
+  enabled: boolean;
+  clientId: string;
+  clientSecret: string;
+  folderName: string;
+  folderId: string | null;
+  scope: 'file' | 'full';
 }
 
 const DEFAULT_ALLOWED_HOSTS = ['substack.com', '*.substack.com'];
@@ -73,6 +93,14 @@ export function loadConfig(env: Env): AppConfig {
     fetchTimeoutMs: 20_000,
     jobLeaseSeconds: 180,
     sessionTtlSeconds: 30 * 24 * 60 * 60,
+    googleDrive: {
+      enabled: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
+      clientId: env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: env.GOOGLE_CLIENT_SECRET ?? '',
+      folderName: (env.GOOGLE_DRIVE_FOLDER_NAME ?? '').trim() || 'Substack to Kobo',
+      folderId: (env.GOOGLE_DRIVE_FOLDER_ID ?? '').trim() || null,
+      scope: (env.GOOGLE_DRIVE_SCOPE ?? 'file').trim().toLowerCase() === 'full' ? 'full' : 'file',
+    },
   };
 }
 

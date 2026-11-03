@@ -9,7 +9,11 @@ The system produces standard, DRM-free EPUB 3 files. Kobo devices read these nat
 3. Copy the `.epub` file anywhere on the Kobo drive (a `Books/` folder keeps things tidy).
 4. Eject the drive. The Kobo imports the book and shows it in **My Books**.
 
-## Path 2: Google Drive or Dropbox from your phone (wireless)
+## Path 2: Automatic Google Drive upload (wireless, recommended)
+
+Connect Google Drive once from the library page and every finished EPUB is uploaded to a folder in your Drive; the Kobo then fetches it with Sync. Setup and troubleshooting: [GOOGLE_DRIVE.md](GOOGLE_DRIVE.md).
+
+## Path 2b: Google Drive or Dropbox by hand from your phone
 
 Kobo's current eReaders, including the Libra Colour, can link to a Google Drive or Dropbox account and import non-DRM EPUB/PDF files from it. According to Kobo's help centre this requires firmware 4.37+ for Google Drive and 4.18+ for Dropbox; check **More › Settings › Device information** and update if needed. Verify the exact steps in the current Kobo help articles, since the menus change between firmware versions.
 
@@ -25,7 +29,7 @@ The experimental browser on Kobo devices can sometimes download files directly f
 
 ## Delivery adapters in the code
 
-`src/delivery/types.ts` defines a `DeliveryAdapter`. Only `DirectDownloadDelivery` is implemented. A Google Drive or Dropbox adapter would upload the finished EPUB to the linked folder using those providers' documented OAuth APIs; that requires an OAuth app registration and token storage and is intentionally left as a future, separate integration. The processing pipeline does not need to change for it.
+`src/delivery/types.ts` defines a `DeliveryAdapter`. `DirectDownloadDelivery` serves the authenticated download; `googleDrive.ts` and `driveDelivery.ts` implement the Google Drive push using Google's OAuth 2.0 and Drive v3 APIs. A Dropbox adapter would follow the same shape. The processing pipeline only calls `deliverToDriveIfConnected` after an EPUB is stored.
 
 ## Cover images
 

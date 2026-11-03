@@ -1,6 +1,7 @@
 import { importObjectKey } from '../acquisition';
 import { ArticleRepository } from '../db/articles';
 import { JobRepository } from '../db/jobs';
+import { GoogleDriveClient } from '../delivery';
 import type { AppConfig, Env } from '../env';
 import { dispatchJob } from '../jobs/dispatcher';
 import type { Logger } from '../observability/logger';
@@ -43,6 +44,9 @@ export function toArticleView(article: ArticleRecord): ArticleView {
     downloadUrl: ready ? `/api/articles/${article.id}/download` : null,
     canRetry: RETRYABLE_ARTICLE_STATUSES.includes(article.status),
     canImport: article.status !== 'PROCESSING' && article.status !== 'QUEUED',
+    driveStatus: article.driveStatus,
+    driveError: article.driveError,
+    driveUploadedAt: article.driveUploadedAt,
     updatedAt: article.updatedAt,
   };
 }
@@ -132,6 +136,46 @@ export async function importArticleContent(
   return updated ?? article;
 }
 
+/** Uploads (or re-uploads) a READY article's EPUB to Google Drive. */
+export async function sendArticleToDrive(deps: LibraryDeps, id: string): Promise<ArticleRecord> {
+  const articles = new ArticleRepository(deps.env.DB);
+  const article = await getArticle(deps, id);
+  if (article.status !== 'READY' || !article.epubObjectKey) {
+    throw new AppError('CONFLICT', 'The EPUB must be ready before it can be sent to Google Drive.');
+  }
+  const client = new GoogleDriveClient(deps.env, deps.logger);
+  client.assertConfigured();
+  const status = await client.status();
+  if (!status.connected) {
+    throw new AppError(
+      'INTEGRATION_NOT_CONNECTED',
+      'Google Drive is not connected. Connect it from the library page.',
+    );
+  }
+  const object = await new EpubStorage(deps.env.EPUBS, deps.logger).getEpub(article.epubObjectKey);
+  if (!object)
+    throw new AppError(
+      'NOT_FOUND',
+      'The EPUB file is missing from storage. Retry processing first.',
+    );
+  const bytes = new Uint8Array(await object.arrayBuffer());
+  try {
+    const result = await client.uploadEpub(
+      bytes,
+      article.epubFilename ?? `article-${id.slice(0, 8)}.epub`,
+      article.driveFileId,
+    );
+    await articles.setDriveResult(id, { fileId: result.fileId });
+  } catch (error) {
+    const appError =
+      error instanceof AppError ? error : new AppError('DELIVERY_FAILED', String(error));
+    await articles.setDriveResult(id, { error: appError.message });
+    throw appError;
+  }
+  const updated = await articles.findById(id);
+  return updated ?? article;
+}
+
 /** Deletes stored files first, then the database row (jobs cascade). */
 export async function deleteArticle(deps: LibraryDeps, id: string): Promise<void> {
   const articles = new ArticleRepository(deps.env.DB);
@@ -140,6 +184,12 @@ export async function deleteArticle(deps: LibraryDeps, id: string): Promise<void
   const keys = [importObjectKey(id)];
   if (article.epubObjectKey) keys.push(article.epubObjectKey);
   await storage.deleteMany(keys);
+  if (article.driveFileId) {
+    // Best effort: the copy in Drive is the user's; failing to remove it must not block deletion.
+    await new GoogleDriveClient(deps.env, deps.logger)
+      .deleteFile(article.driveFileId)
+      .catch((error) => deps.logger.warn('drive.delete_failed', { articleId: id, error }));
+  }
   await new JobRepository(deps.env.DB).deleteByArticle(id);
   await articles.delete(id);
   deps.logger.info('article.deleted', { articleId: id, hadEpub: !!article.epubObjectKey });
