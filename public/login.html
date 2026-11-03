@@ -9,7 +9,7 @@
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#1f3a5f">
 </head>
-<body>
+<body data-page="login">
   <header class="top"><h1>Substack to Kobo</h1></header>
   <main>
     <div class="card">
@@ -18,13 +18,12 @@
       <form id="login-form" autocomplete="on">
         <label for="password">Password</label>
         <input id="password" name="password" type="password" autocomplete="current-password" required>
-        <div style="height:12px"></div>
+        <div class="spacer"></div>
         <button type="submit" class="block" id="login-button">Sign in</button>
       </form>
       <div id="login-error" class="alert error hidden" role="alert"></div>
     </div>
   </main>
   <script src="/app.js"></script>
-  <script>SK.initLogin();</script>
 </body>
 </html>

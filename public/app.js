@@ -341,7 +341,7 @@
         '<article class="card article" data-id="' +
         article.id +
         '">' +
-        '<div class="row" style="justify-content:space-between;align-items:flex-start">' +
+        '<div class="row between top">' +
         '<h3>' +
         escapeHtml(article.title || article.canonicalUrl) +
         '</h3>' +
@@ -446,4 +446,11 @@
   }
 
   window.SK = { initLogin, initCapture, initLibrary };
+
+  // Pages declare which flow they need via <body data-page="...">. No inline
+  // scripts are used so the strict Content-Security-Policy (script-src 'self')
+  // can stay in place.
+  const PAGES = { login: initLogin, capture: initCapture, library: initLibrary };
+  const init = PAGES[document.body.dataset.page];
+  if (init) init();
 })();

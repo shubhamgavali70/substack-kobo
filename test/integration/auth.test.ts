@@ -149,3 +149,24 @@ describe('authentication and authorization', () => {
     expect(response.headers.get('x-request-id')).toBeTruthy();
   });
 });
+
+describe('served pages and CSP', () => {
+  const testEnv = inlineEnv();
+
+  it('pages contain no inline scripts, which the CSP would block', async () => {
+    const cookie = await login(testEnv);
+    for (const path of ['/login', '/', '/library']) {
+      const response = await call(testEnv, path, { headers: path === '/login' ? {} : { cookie } });
+      expect(response.status).toBe(200);
+      const html = await response.text();
+      const csp = response.headers.get('content-security-policy') ?? '';
+      expect(csp).toContain("script-src 'self'");
+      const inlineScripts = [...html.matchAll(/<script(?![^>]*\ssrc=)[^>]*>/g)];
+      expect(inlineScripts, `${path} has inline <script>`).toHaveLength(0);
+      expect(html).not.toMatch(/\son[a-z]+=/i); // no inline event handlers either
+      expect(html).not.toMatch(/\sstyle=/i); // style-src 'self' blocks inline styles
+      expect(html).toMatch(/<body data-page="(login|capture|library)">/);
+      expect(html).toContain('<script src="/app.js"></script>');
+    }
+  });
+});

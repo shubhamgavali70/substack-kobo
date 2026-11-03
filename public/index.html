@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="To Kobo">
 </head>
-<body>
+<body data-page="capture">
   <header class="top">
     <h1>Substack to Kobo</h1>
     <nav><a href="/" aria-current="page">Save</a><a href="/library">Library</a><a href="/login" id="logout-link">Sign out</a></nav>
@@ -23,14 +23,14 @@
       <form id="capture-form">
         <label for="url">Article URL</label>
         <input id="url" name="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://publication.substack.com/p/…" required>
-        <div style="height:12px"></div>
+        <div class="spacer"></div>
         <button type="submit" class="block" id="capture-button">Convert to EPUB</button>
       </form>
     </div>
 
     <div id="result" class="card hidden" aria-live="polite">
-      <div class="row" style="justify-content:space-between">
-        <h2 id="result-title" style="margin:0">Processing</h2>
+      <div class="row between">
+        <h2 id="result-title" class="m0">Processing</h2>
         <span id="result-status" class="status">QUEUED</span>
       </div>
       <p id="result-meta" class="muted"></p>
@@ -43,18 +43,18 @@
         <a href="/library" class="button secondary">Go to library</a>
       </div>
 
-      <div id="import-panel" class="hidden" style="margin-top:14px">
+      <div id="import-panel" class="hidden mt">
         <h2>Manual import</h2>
         <p class="muted">This post could not be fetched publicly (for example it is subscriber-only). If you are entitled to read it, paste the full text or HTML you received (for example from the subscriber email). Nothing is bypassed; the EPUB is built from what you provide.</p>
         <form id="import-form">
           <label for="import-content">Article text or HTML</label>
           <textarea id="import-content" required placeholder="Paste the article here…"></textarea>
-          <div style="height:10px"></div>
+          <div class="spacer-sm"></div>
           <div class="row">
             <div><label for="import-title">Title (optional)</label><input id="import-title" type="text"></div>
             <div><label for="import-author">Author (optional)</label><input id="import-author" type="text"></div>
           </div>
-          <div style="height:12px"></div>
+          <div class="spacer"></div>
           <button type="submit" class="block" id="import-button">Build EPUB from pasted content</button>
         </form>
       </div>
@@ -67,6 +67,5 @@
     </details>
   </main>
   <script src="/app.js"></script>
-  <script>SK.initCapture();</script>
 </body>
 </html>

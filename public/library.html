@@ -9,7 +9,7 @@
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#1f3a5f">
 </head>
-<body>
+<body data-page="library">
   <header class="top">
     <h1>Substack to Kobo</h1>
     <nav><a href="/">Save</a><a href="/library" aria-current="page">Library</a><a href="/login" id="logout-link">Sign out</a></nav>
@@ -17,8 +17,8 @@
   <main>
     <form id="filter-form" class="card">
       <div class="row">
-        <div style="flex:3 1 200px"><label for="q">Search</label><input id="q" name="q" type="search" placeholder="Title, author, publication"></div>
-        <div style="flex:1 1 140px"><label for="status">Status</label>
+        <div class="grow-3"><label for="q">Search</label><input id="q" name="q" type="search" placeholder="Title, author, publication"></div>
+        <div class="grow-1"><label for="status">Status</label>
           <select id="status" name="status">
             <option value="">All</option>
             <option value="READY">Ready</option>
@@ -31,7 +31,7 @@
           </select>
         </div>
       </div>
-      <div style="height:10px"></div>
+      <div class="spacer-sm"></div>
       <button type="submit" class="secondary">Apply</button>
     </form>
 
@@ -44,6 +44,5 @@
     </div>
   </main>
   <script src="/app.js"></script>
-  <script>SK.initLibrary();</script>
 </body>
 </html>
